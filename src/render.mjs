@@ -1,5 +1,5 @@
-// Composes the 1024x1024 world-news front page for Tuesday 24 November 2026
-// and renders entry.png via headless Google Chrome.
+// Composes the 1024x1024 world-news front page for Tuesday 24 November 2026 (v6 Full-Day Edition)
+// Captures entry.png via headless Google Chrome.
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, statSync, writeFileSync } from "node:fs";
@@ -9,6 +9,7 @@ import { renderIllustration } from "./illustrations.mjs";
 import {
   BRIEF_STORIES,
   DATE_CHECK_EXCLUDED,
+  DATE_CHECK_NOT_YET,
   HERO_STORIES,
   MEDIUM_STORIES,
   NUMBERS_KPI,
@@ -22,6 +23,7 @@ const STATUS_STYLE = {
   CONFIRMED: { bg: "#1F6E47", fg: "#FFFFFF" },
   REPORTED: { bg: "#1A6B77", fg: "#FFFFFF" },
   CLAIM: { bg: "#B25E12", fg: "#FFFFFF" },
+  ONGOING: { bg: "#7C3AED", fg: "#FFFFFF" },
 };
 
 function esc(str) {
@@ -39,9 +41,7 @@ function statusPill(status) {
 
 function buildHtml() {
   const allStories = [...HERO_STORIES, ...MEDIUM_STORIES, ...BRIEF_STORIES];
-  if (allStories.length !== 40) {
-    throw new Error(`Expected 40 stories, got ${allStories.length}`);
-  }
+  const totalCount = allStories.length;
   const regionCounts = {};
   for (const s of allStories) {
     regionCounts[s.region] = (regionCounts[s.region] || 0) + 1;
@@ -103,8 +103,9 @@ function buildHtml() {
     </article>`;
   }).join("");
 
-  const leftBriefs = BRIEF_STORIES.slice(0, 14);
-  const rightBriefs = BRIEF_STORIES.slice(14);
+  const half = Math.ceil(BRIEF_STORIES.length / 2);
+  const leftBriefs = BRIEF_STORIES.slice(0, half);
+  const rightBriefs = BRIEF_STORIES.slice(half);
 
   const renderBriefTable = (list) =>
     list
@@ -153,7 +154,7 @@ function buildHtml() {
     padding: 0 10px;
     font-size: 9px;
     font-weight: 800;
-    letter-spacing: 0.7px;
+    letter-spacing: 0.65px;
     text-transform: uppercase;
   }
   .content {
@@ -170,8 +171,8 @@ function buildHtml() {
   }
   .masthead h1 {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 47px;
-    line-height: 0.96;
+    font-size: 48px;
+    line-height: 0.95;
     font-weight: 900;
     letter-spacing: -0.9px;
     color: #101B2B;
@@ -180,7 +181,7 @@ function buildHtml() {
     margin-top: 2px;
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
-    font-size: 12.2px;
+    font-size: 12.4px;
     font-weight: 700;
     color: #9E1F24;
   }
@@ -197,7 +198,7 @@ function buildHtml() {
     flex: 1;
     text-align: center;
     color: #FFFFFF;
-    font-size: 8.6px;
+    font-size: 8.7px;
     font-weight: 800;
     letter-spacing: 0.45px;
     padding: 2.5px 4px;
@@ -213,12 +214,12 @@ function buildHtml() {
   .utc-bar {
     background: #1B2C44;
     color: #E8EDF4;
-    padding: 2.8px 7px;
+    padding: 2.8px 6px;
     border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 8.2px;
+    font-size: 8px;
     white-space: nowrap;
   }
   .utc-tag {
@@ -228,18 +229,18 @@ function buildHtml() {
     padding: 1px 5px;
     border-radius: 2px;
     margin-right: 4px;
-    font-size: 7.9px;
+    font-size: 7.8px;
     letter-spacing: 0.4px;
   }
   .utc-item b { color: #F5C242; font-weight: 800; }
-  .utc-sep { color: #7E92AD; margin: 0 1.5px; }
+  .utc-sep { color: #7E92AD; margin: 0 1px; }
 
   /* Tier 1: 3 Heroes + Numbers Sidebar */
   .tier1 {
     display: grid;
     grid-template-columns: 266px 266px 266px 192px;
     gap: 6px;
-    height: 222px;
+    height: 224px;
   }
   .hero-card {
     background: #FFFFFF;
@@ -275,7 +276,7 @@ function buildHtml() {
     width: 15px;
     height: 15px;
     font-size: 8.5px;
-    top: 3px;
+    top: 3.5px;
     left: 4px;
     right: auto;
   }
@@ -312,14 +313,14 @@ function buildHtml() {
   }
   .hero-hl {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 14.8px;
-    line-height: 1.12;
+    font-size: 15.2px;
+    line-height: 1.11;
     font-weight: 900;
     color: #0F1A2A;
     margin-bottom: 3px;
   }
   .hero-sum {
-    font-size: 9.5px;
+    font-size: 9.6px;
     line-height: 1.24;
     color: #2B3645;
     flex: 1;
@@ -363,13 +364,13 @@ function buildHtml() {
   .kpi-row:last-child { border-bottom: none; padding-bottom: 0; }
   .kpi-val {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 14px;
+    font-size: 14.2px;
     font-weight: 900;
-    line-height: 1.05;
+    line-height: 1.04;
     margin-bottom: 1.5px;
   }
   .kpi-lbl {
-    font-size: 7.7px;
+    font-size: 7.8px;
     line-height: 1.15;
     color: #D7E0EC;
   }
@@ -404,20 +405,20 @@ function buildHtml() {
   }
   .med-hl {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 11.4px;
+    font-size: 11.7px;
     line-height: 1.12;
     font-weight: 900;
     color: #0F1A2A;
     margin-bottom: 2px;
   }
   .med-sum {
-    font-size: 8.6px;
+    font-size: 8.75px;
     line-height: 1.19;
     color: #2D3848;
     flex: 1;
   }
 
-  /* Tier 3: Map + Crisp 1-Line Tabular Briefs */
+  /* Tier 3: Large World Map + Spacious 24 Briefs (12x2) */
   .tier3 {
     display: grid;
     grid-template-columns: 294px minmax(0, 1fr);
@@ -455,45 +456,24 @@ function buildHtml() {
     color: #5C6978;
     font-weight: 700;
   }
-  .mkt-strip {
+  .map-key {
     margin-top: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 8px;
+    font-size: 7.6px;
+    color: #334155;
+    padding: 4px 5px;
     background: #F4EFE4;
     border: 1px solid #D7CFBE;
     border-radius: 2px;
-    padding: 4.5px 6px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
   }
-  .mkt-hdr {
-    font-size: 7.7px;
-    font-weight: 900;
-    letter-spacing: 0.4px;
-    color: #132238;
-    border-bottom: 1px solid #D4CCBA;
-    padding-bottom: 2px;
-  }
-  .mkt-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px 10px;
-  }
-  .mkt-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 8.2px;
-    color: #1E293B;
-  }
-  .mkt-row b { font-weight: 900; }
-  .up { color: #166534; }
-  .dn { color: #9E1F24; }
+  .map-key b { color: #0F1A2A; font-weight: 800; }
 
   .brief-cols {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
+    gap: 6px;
     flex: 1;
     min-width: 0;
   }
@@ -508,21 +488,21 @@ function buildHtml() {
     display: flex;
     align-items: baseline;
     gap: 3.5px;
-    font-size: 7.95px;
-    line-height: 1.15;
+    font-size: 8.2px;
+    line-height: 1.22;
     color: #1B2738;
     border-bottom: 1px dotted #E6E0D3;
-    padding-bottom: 1.5px;
+    padding-bottom: 2px;
     min-width: 0;
   }
   .brief-row:last-child { border-bottom: none; padding-bottom: 0; }
   .brief-num {
     flex-shrink: 0;
-    width: 14px;
-    height: 12.5px;
+    width: 15px;
+    height: 13.5px;
     border-radius: 2px;
     color: #FFFFFF;
-    font-size: 7.2px;
+    font-size: 7.5px;
     font-weight: 900;
     display: inline-flex;
     align-items: center;
@@ -538,7 +518,7 @@ function buildHtml() {
   .brief-text b { color: #0F1A2A; font-weight: 800; margin-right: 2px; }
   .brief-src {
     flex-shrink: 0;
-    font-size: 6.9px;
+    font-size: 7.1px;
     color: #64748B;
     font-weight: 700;
   }
@@ -586,14 +566,14 @@ function buildHtml() {
 <body>
 <div class="page">
   <header class="top-bar">
-    <span>THE WORLD IN ONE DAY</span>
-    <span>40 STORIES · 7 REGIONS · EVERY ONE DATED TUESDAY 24 NOVEMBER 2026 (UTC)</span>
+    <span>THE WORLD IN ONE DAY · FULL DAY TO 21:45 UTC</span>
+    <span>${totalCount} STORIES · 7 REGIONS · EVERY ONE DATED TUESDAY 24 NOVEMBER 2026</span>
   </header>
 
   <main class="content">
     <section class="masthead">
       <h1>Tuesday 24 November 2026</h1>
-      <div class="subdeck">China names first foreign astronaut for Tiangong · Asian chip stocks surge up to 9% · Iran claims Hormuz mine hits as oil stays low</div>
+      <div class="subdeck">US jury convicts Huawei on 10 counts · Houthi strike hits Riyadh's PIF Tower, 11 hurt · CAS restores Senegal's AFCON 2025 title</div>
     </section>
 
     <section class="bars">
@@ -623,23 +603,20 @@ function buildHtml() {
           <span class="sec-sub">pins = stories 1–13</span>
         </div>
         ${mapSvg}
-        <div class="mkt-strip">
-          <div class="mkt-hdr">MARKETS &amp; DATA · TUESDAY 24 NOV</div>
-          <div class="mkt-grid">
-            <div class="mkt-row"><span>Taiwan Taiex</span><b class="up">+9.0%</b></div>
-            <div class="mkt-row"><span>Brent Crude</span><b class="dn">~$89–92</b></div>
-            <div class="mkt-row"><span>Seoul KOSPI</span><b class="up">+6.5%</b></div>
-            <div class="mkt-row"><span>China Cobalt</span><b class="up">3M High</b></div>
-            <div class="mkt-row"><span>Tokyo Nikkei</span><b class="up">+4.0%</b></div>
-            <div class="mkt-row"><span>SG Q3 Exports</span><b class="up">+45.8%</b></div>
-          </div>
+        <div class="map-key">
+          <span><b>1</b> Brooklyn · <b>5</b> DC · <b>10</b> TN</span>
+          <span><b>2</b> Riyadh · <b>6</b> Gaza</span>
+          <span><b>3</b> Senegal · <b>8</b> DR Congo</span>
+          <span><b>4</b> Shanghai · <b>11</b> China</span>
+          <span><b>9</b> Paris · <b>12</b> Odesa</span>
+          <span><b>7</b> Canberra · <b>13</b> Colombia</span>
         </div>
       </div>
 
       <div class="briefs-panel">
         <div class="sec-hdr">
-          <span class="sec-title">ALSO ON TUESDAY 24 NOVEMBER — 27 MORE STORIES</span>
-          <span class="sec-sub">stories 14–40</span>
+          <span class="sec-title">ALSO ON TUESDAY 24 NOVEMBER — 24 MORE STORIES</span>
+          <span class="sec-sub">stories 14–37</span>
         </div>
         <div class="brief-cols">
           <ul class="brief-list">${renderBriefTable(leftBriefs)}</ul>
@@ -651,13 +628,14 @@ function buildHtml() {
     <section class="date-check">
       <span class="dc-tag">DATE CHECK</span>
       <div class="dc-text">
-        <b>Every story on this page happened or was first reported on Tuesday 24 November 2026 (UTC / local 24 Nov).</b>
-        <span class="dc-ex">Left out as earlier days' news:</span> ${esc(DATE_CHECK_EXCLUDED)}
+        <b>Every story on this page happened or was first reported on Tuesday 24 November 2026 (UTC).</b>
+        <span class="dc-ex">Left out (earlier):</span> ${esc(DATE_CHECK_EXCLUDED)}
+        <span class="dc-ex"> ${esc(DATE_CHECK_NOT_YET)}</span>
       </div>
     </section>
 
     <footer class="footer-bar">
-      <span><b>HOW SURE:</b> OFFICIAL = on record · CONFIRMED = 2+ wires · REPORTED = named outlet · CLAIM = contested / one side's account</span>
+      <span><b>HOW SURE:</b> OFFICIAL = on record · CONFIRMED = 2+ wires · REPORTED = named outlet · CLAIM = contested / one side's account · ONGOING = still unfolding</span>
       <span>Scenes are drawn illustrations, not photographs.</span>
     </footer>
   </main>

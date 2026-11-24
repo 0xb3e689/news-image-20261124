@@ -1,8 +1,8 @@
-// Equirectangular world map with numbered story pins 1-13
+// Equirectangular world map with numbered story pins 1-13 (v6 Full-Day Edition)
 // Projection: lon [-180, 180] -> x [0, W], lat [82, -58] -> y [0, H]
 
 const W = 282;
-const H = 186;
+const H = 204;
 
 export function project(lon, lat) {
   const x = ((lon + 180) / 360) * W;
@@ -55,15 +55,13 @@ function polyToPath(pts) {
   );
 }
 
-// Tight micro-offsets so pins stay on their true countries while avoiding overlap
+// Micro-offsets ONLY where US East Coast pins (#1 Brooklyn, #5 DC, #10 TN) sit near each other
 const PIN_OFFSETS = {
-  1: [-2, -2],  // Jiuquan
-  2: [-2, 4],   // Taipei/Seoul
-  4: [2, 3],    // Dhaka
-  7: [2, -2],   // Ulleungdo (East Sea off S. Korea)
-  8: [-2, 2],   // Cairo (Egypt Nile Delta)
-  11: [3, -2],  // Khan Younis (Gaza)
-  12: [-2, -2], // Koshi, Nepal
+  1: [4, -4],   // Brooklyn NY
+  5: [3, 4],    // Washington DC
+  10: [-6, 4],  // Tennessee
+  6: [-2, -2],  // Gaza
+  2: [3, 2],    // Riyadh
 };
 
 export function renderWorldMap(stories, regions) {
@@ -92,8 +90,8 @@ export function renderWorldMap(stories, regions) {
       const y = by + dy;
       const fill = regions[s.region]?.color || "#132238";
       return `<g>
-        <circle cx="${x}" cy="${y}" r="5.6" fill="${fill}" stroke="#FFFFFF" stroke-width="1.1"/>
-        <text x="${x}" y="${y + 2.4}" text-anchor="middle" fill="#FFFFFF" font-family="Helvetica Neue, Arial, sans-serif" font-size="6.5" font-weight="800">${s.id}</text>
+        <circle cx="${x}" cy="${y}" r="5.9" fill="${fill}" stroke="#FFFFFF" stroke-width="1.15"/>
+        <text x="${x}" y="${y + 2.5}" text-anchor="middle" fill="#FFFFFF" font-family="Helvetica Neue, Arial, sans-serif" font-size="6.8" font-weight="800">${s.id}</text>
       </g>`;
     })
     .join("");
