@@ -1,4 +1,4 @@
-// Composes the 1024x1024 world-news front page for Tuesday 24 November 2026 (v6 Full-Day Edition)
+// Composes the 1024x1024 world-news front page for Tuesday 24 November 2026 (v7 Championship Edition)
 // Captures entry.png via headless Google Chrome.
 
 import { execFileSync } from "node:child_process";
@@ -12,7 +12,6 @@ import {
   DATE_CHECK_NOT_YET,
   HERO_STORIES,
   MEDIUM_STORIES,
-  NUMBERS_KPI,
   REGIONS,
   UTC_TIMELINE,
 } from "./stories.mjs";
@@ -77,13 +76,6 @@ function buildHtml() {
     </article>`;
   }).join("");
 
-  const kpiRows = NUMBERS_KPI.map(
-    (k) => `<div class="kpi-row">
-      <div class="kpi-val" style="color:${k.accent};">${esc(k.value)}</div>
-      <div class="kpi-lbl">${esc(k.label)}</div>
-    </div>`
-  ).join("");
-
   const medCards = MEDIUM_STORIES.map((s) => {
     const rc = REGIONS[s.region].color;
     return `<article class="med-card">
@@ -93,7 +85,7 @@ function buildHtml() {
       </div>
       <div class="med-body">
         <div class="meta-row">
-          <span class="kicker sm" style="color:${rc};">${esc(s.location)}</span>
+          <span class="kicker sm" style="color:${rc};">${esc(s.location)} · ${esc(s.beat)}</span>
           ${statusPill(s.status)}
         </div>
         <h3 class="med-hl">${esc(s.headline)}</h3>
@@ -103,23 +95,27 @@ function buildHtml() {
     </article>`;
   }).join("");
 
-  const half = Math.ceil(BRIEF_STORIES.length / 2);
-  const leftBriefs = BRIEF_STORIES.slice(0, half);
-  const rightBriefs = BRIEF_STORIES.slice(half);
+  const mapSvg = renderWorldMap([...HERO_STORIES, ...MEDIUM_STORIES]);
 
-  const renderBriefTable = (list) =>
-    list
+  const leftBriefs = BRIEF_STORIES.slice(0, 12);
+  const rightBriefs = BRIEF_STORIES.slice(12);
+
+  function renderBriefList(items) {
+    return items
       .map((b) => {
         const rc = REGIONS[b.region].color;
+        const tagHtml = b.tag
+          ? `<span class="brief-tag" style="background:${(STATUS_STYLE[b.tag] || STATUS_STYLE.CLAIM).bg};">${esc(b.tag)}</span>`
+          : "";
         return `<li class="brief-row">
           <span class="brief-num" style="background:${rc};">${b.id}</span>
           <span class="brief-text"><b>${esc(b.place)}</b> ${esc(b.text)}</span>
+          ${tagHtml}
           <span class="brief-src">${esc(b.src)}</span>
         </li>`;
       })
       .join("");
-
-  const mapSvg = renderWorldMap([...HERO_STORIES, ...MEDIUM_STORIES], REGIONS);
+  }
 
   return `<!doctype html>
 <html lang="en">
@@ -132,9 +128,9 @@ function buildHtml() {
     width: 1024px;
     height: 1024px;
     overflow: hidden;
-    background: #FAF7F0;
-    color: #132238;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #F6F3EB;
+    color: #141E2B;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   .page {
@@ -142,19 +138,19 @@ function buildHtml() {
     height: 1024px;
     display: flex;
     flex-direction: column;
-    background: #FAF7F0;
+    background: #F6F3EB;
   }
   .top-bar {
-    height: 20px;
     background: #132238;
-    color: #F4EFE6;
+    color: #F2F5F8;
+    height: 21px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 10px;
     font-size: 9px;
     font-weight: 800;
-    letter-spacing: 0.65px;
+    letter-spacing: 0.75px;
     text-transform: uppercase;
   }
   .content {
@@ -171,8 +167,8 @@ function buildHtml() {
   }
   .masthead h1 {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 48px;
-    line-height: 0.95;
+    font-size: 47px;
+    line-height: 0.94;
     font-weight: 900;
     letter-spacing: -0.9px;
     color: #101B2B;
@@ -181,7 +177,7 @@ function buildHtml() {
     margin-top: 2px;
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
-    font-size: 12.4px;
+    font-size: 12.6px;
     font-weight: 700;
     color: #9E1F24;
   }
@@ -192,34 +188,35 @@ function buildHtml() {
   }
   .region-bar {
     display: flex;
-    gap: 4px;
+    gap: 3px;
   }
   .reg-pill {
     flex: 1;
     text-align: center;
     color: #FFFFFF;
-    font-size: 8.7px;
+    font-size: 7.7px;
     font-weight: 800;
-    letter-spacing: 0.45px;
-    padding: 2.5px 4px;
+    letter-spacing: 0.25px;
+    padding: 2.5px 2px;
     border-radius: 2px;
+    white-space: nowrap;
   }
   .reg-pill b {
     font-weight: 900;
-    margin-left: 2px;
+    margin-left: 1.5px;
     background: rgba(255,255,255,0.22);
-    padding: 0 3px;
+    padding: 0 2.5px;
     border-radius: 2px;
   }
   .utc-bar {
     background: #1B2C44;
     color: #E8EDF4;
-    padding: 2.8px 6px;
+    padding: 2.6px 6px;
     border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 8px;
+    font-size: 7.9px;
     white-space: nowrap;
   }
   .utc-tag {
@@ -228,17 +225,17 @@ function buildHtml() {
     font-weight: 900;
     padding: 1px 5px;
     border-radius: 2px;
-    margin-right: 4px;
-    font-size: 7.8px;
-    letter-spacing: 0.4px;
+    margin-right: 3px;
+    font-size: 7.6px;
+    letter-spacing: 0.35px;
   }
   .utc-item b { color: #F5C242; font-weight: 800; }
   .utc-sep { color: #7E92AD; margin: 0 1px; }
 
-  /* Tier 1: 3 Heroes + Numbers Sidebar */
+  /* Tier 1: 3 HUGE Full-Width Hero Cards (328px each) */
   .tier1 {
     display: grid;
-    grid-template-columns: 266px 266px 266px 192px;
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     height: 224px;
   }
@@ -252,20 +249,20 @@ function buildHtml() {
   }
   .hero-art {
     position: relative;
-    width: 266px;
-    height: 96px;
+    width: 100%;
+    height: 98px;
     flex-shrink: 0;
   }
-  .hero-art svg { display: block; width: 266px; height: 96px; }
+  .hero-art svg { display: block; width: 100%; height: 98px; }
   .num-badge {
     position: absolute;
-    right: 5px;
+    left: 5px;
     top: 5px;
-    width: 17px;
-    height: 17px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     color: #FFFFFF;
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 900;
     display: flex;
     align-items: center;
@@ -273,15 +270,14 @@ function buildHtml() {
     border: 1.5px solid #FFFFFF;
   }
   .num-badge.sm {
-    width: 15px;
-    height: 15px;
-    font-size: 8.5px;
-    top: 3.5px;
+    width: 16px;
+    height: 16px;
+    font-size: 8.8px;
+    top: 4px;
     left: 4px;
-    right: auto;
   }
   .hero-body {
-    padding: 5px 7px 4px 7px;
+    padding: 5px 8px 4px 8px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -294,7 +290,7 @@ function buildHtml() {
     margin-bottom: 2px;
   }
   .kicker {
-    font-size: 8.2px;
+    font-size: 8.4px;
     font-weight: 900;
     letter-spacing: 0.35px;
     text-transform: uppercase;
@@ -302,83 +298,60 @@ function buildHtml() {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .kicker.sm { font-size: 7.4px; }
+  .kicker.sm { font-size: 7.7px; }
   .status-pill {
-    font-size: 6.7px;
+    font-size: 6.9px;
     font-weight: 800;
     letter-spacing: 0.3px;
-    padding: 1px 4px;
+    padding: 1px 4.5px;
     border-radius: 2px;
     flex-shrink: 0;
   }
   .hero-hl {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 15.2px;
+    font-size: 16.5px;
     line-height: 1.11;
     font-weight: 900;
     color: #0F1A2A;
     margin-bottom: 3px;
   }
   .hero-sum {
-    font-size: 9.6px;
+    font-size: 10.1px;
     line-height: 1.24;
     color: #2B3645;
     flex: 1;
   }
   .src-line {
-    font-size: 7.8px;
+    font-size: 8px;
     color: #606C7C;
     font-weight: 600;
     margin-top: 2px;
   }
-  .src-line.sm { font-size: 7.2px; }
+  .src-line.sm { font-size: 7.4px; }
 
-  .numbers-box {
-    background: #132238;
-    color: #F8FAFC;
-    border-radius: 3px;
-    overflow: hidden;
+  /* Tier 2: 8 BIG Medium Editorial Cards (2x4 — 25% wider than 2x5!) */
+  .tier2-hdr {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: 7px;
+    border-top: 1.5px solid #132238;
+    padding-top: 2px;
   }
-  .numbers-hdr {
-    background: #B8292F;
-    color: #FFFFFF;
+  .tier2-hdr b {
     font-size: 9px;
     font-weight: 900;
     letter-spacing: 0.6px;
-    padding: 3.5px 7px;
+    color: #132238;
     text-transform: uppercase;
   }
-  .numbers-list {
-    flex: 1;
-    padding: 4px 7px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  .tier2-hdr span {
+    font-size: 8.4px;
+    color: #556272;
+    font-style: italic;
   }
-  .kpi-row {
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-    padding-bottom: 2px;
-  }
-  .kpi-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .kpi-val {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 14.2px;
-    font-weight: 900;
-    line-height: 1.04;
-    margin-bottom: 1.5px;
-  }
-  .kpi-lbl {
-    font-size: 7.8px;
-    line-height: 1.15;
-    color: #D7E0EC;
-  }
-
-  /* Tier 2: 10 Medium Editorial Cards (2x5) */
   .tier2 {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     grid-template-rows: 152px 152px;
     gap: 5px;
   }
@@ -393,32 +366,32 @@ function buildHtml() {
   .med-art {
     position: relative;
     width: 100%;
-    height: 62px;
+    height: 66px;
     flex-shrink: 0;
   }
-  .med-art svg { display: block; width: 100%; height: 62px; }
+  .med-art svg { display: block; width: 100%; height: 66px; }
   .med-body {
-    padding: 4px 5.5px 3px 5.5px;
+    padding: 4px 6.5px 3px 6.5px;
     display: flex;
     flex-direction: column;
     flex: 1;
   }
   .med-hl {
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 11.7px;
+    font-size: 12.8px;
     line-height: 1.12;
     font-weight: 900;
     color: #0F1A2A;
     margin-bottom: 2px;
   }
   .med-sum {
-    font-size: 8.75px;
+    font-size: 9.1px;
     line-height: 1.19;
     color: #2D3848;
     flex: 1;
   }
 
-  /* Tier 3: Large World Map + Spacious 24 Briefs (12x2) */
+  /* Tier 3: World Map + Spacious 24 Briefs (12x2) */
   .tier3 {
     display: grid;
     grid-template-columns: 294px minmax(0, 1fr);
@@ -457,10 +430,10 @@ function buildHtml() {
     font-weight: 700;
   }
   .map-key {
-    margin-top: 5px;
+    margin-top: 4px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px 8px;
+    gap: 2px 6px;
     font-size: 7.6px;
     color: #334155;
     padding: 4px 5px;
@@ -473,7 +446,7 @@ function buildHtml() {
   .brief-cols {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 6px;
+    gap: 7px;
     flex: 1;
     min-width: 0;
   }
@@ -488,7 +461,7 @@ function buildHtml() {
     display: flex;
     align-items: baseline;
     gap: 3.5px;
-    font-size: 8.2px;
+    font-size: 8.35px;
     line-height: 1.22;
     color: #1B2738;
     border-bottom: 1px dotted #E6E0D3;
@@ -522,13 +495,22 @@ function buildHtml() {
     color: #64748B;
     font-weight: 700;
   }
+  .brief-tag {
+    flex-shrink: 0;
+    color: #FFFFFF;
+    font-size: 6.3px;
+    font-weight: 900;
+    letter-spacing: 0.25px;
+    padding: 0.5px 3.5px;
+    border-radius: 2px;
+  }
 
   /* Date Check & Footer */
   .date-check {
     border: 1.5px solid #A12628;
     background: #FFFDF9;
     border-radius: 3px;
-    padding: 4px 7px;
+    padding: 3.5px 7px;
     display: flex;
     align-items: flex-start;
     gap: 7px;
@@ -546,7 +528,7 @@ function buildHtml() {
   }
   .dc-text {
     font-size: 7.55px;
-    line-height: 1.25;
+    line-height: 1.24;
     color: #242F3E;
   }
   .dc-text b { color: #101B2B; }
@@ -566,8 +548,8 @@ function buildHtml() {
 <body>
 <div class="page">
   <header class="top-bar">
-    <span>THE WORLD IN ONE DAY · FULL DAY TO 21:45 UTC</span>
-    <span>${totalCount} STORIES · 7 REGIONS · EVERY ONE DATED TUESDAY 24 NOVEMBER 2026</span>
+    <span>THE WORLD IN ONE DAY · FULL 24 HOURS UTC</span>
+    <span>${totalCount} DATED STORIES · 9 REGIONS · 14 FIELDS · ALL FROM TUESDAY 24 NOVEMBER 2026</span>
   </header>
 
   <main class="content">
@@ -586,11 +568,12 @@ function buildHtml() {
 
     <section class="tier1">
       ${heroCards}
-      <aside class="numbers-box">
-        <div class="numbers-hdr">THE DAY IN NUMBERS</div>
-        <div class="numbers-list">${kpiRows}</div>
-      </aside>
     </section>
+
+    <div class="tier2-hdr">
+      <b>THE DAY IN EIGHT MORE</b>
+      <span>Eight more major stories across six regions — politics, cyber, war, law, health, justice, space &amp; tech</span>
+    </div>
 
     <section class="tier2">
       ${medCards}
@@ -600,27 +583,27 @@ function buildHtml() {
       <div class="map-panel">
         <div class="sec-hdr">
           <span class="sec-title">WHERE IT HAPPENED</span>
-          <span class="sec-sub">pins = stories 1–13</span>
+          <span class="sec-sub">pins = stories 1–11</span>
         </div>
         ${mapSvg}
         <div class="map-key">
-          <span><b>1</b> Brooklyn · <b>5</b> DC · <b>10</b> TN</span>
+          <span><b>1</b> Brooklyn · <b>5</b> DC · <b>11</b> Redmond</span>
           <span><b>2</b> Riyadh · <b>6</b> Gaza</span>
           <span><b>3</b> Senegal · <b>8</b> DR Congo</span>
-          <span><b>4</b> Shanghai · <b>11</b> China</span>
-          <span><b>9</b> Paris · <b>12</b> Odesa</span>
-          <span><b>7</b> Canberra · <b>13</b> Colombia</span>
+          <span><b>4</b> Shanghai · <b>10</b> Jiuquan</span>
+          <span><b>7</b> Canberra · <b>9</b> Paris</span>
+          <span>9 regions colour-coded</span>
         </div>
       </div>
 
       <div class="briefs-panel">
         <div class="sec-hdr">
-          <span class="sec-title">ALSO ON TUESDAY 24 NOVEMBER — 24 MORE STORIES</span>
-          <span class="sec-sub">stories 14–37</span>
+          <span class="sec-title">ALSO ON TUESDAY 24 NOVEMBER — 24 MORE DATED STORIES</span>
+          <span class="sec-sub">stories 12–35</span>
         </div>
         <div class="brief-cols">
-          <ul class="brief-list">${renderBriefTable(leftBriefs)}</ul>
-          <ul class="brief-list">${renderBriefTable(rightBriefs)}</ul>
+          <ul class="brief-list">${renderBriefList(leftBriefs)}</ul>
+          <ul class="brief-list">${renderBriefList(rightBriefs)}</ul>
         </div>
       </div>
     </section>
@@ -636,7 +619,7 @@ function buildHtml() {
 
     <footer class="footer-bar">
       <span><b>HOW SURE:</b> OFFICIAL = on record · CONFIRMED = 2+ wires · REPORTED = named outlet · CLAIM = contested / one side's account · ONGOING = still unfolding</span>
-      <span>Scenes are drawn illustrations, not photographs.</span>
+      <span>Scenes and map drawn in code, not photographs.</span>
     </footer>
   </main>
 </div>
@@ -650,7 +633,7 @@ function render() {
   const workDir = resolve(repoDir, "../../run/news-20261124");
   mkdirSync(workDir, { recursive: true });
 
-  const htmlPath = resolve(workDir, "frontpage-20261124.html");
+  const htmlPath = resolve(workDir, "frontpage-20261124-v7.html");
   const outPng = resolve(repoDir, "entry.png");
   writeFileSync(htmlPath, buildHtml(), "utf8");
 
